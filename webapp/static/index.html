@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AzViz Web App</title>
+    <style>
+      :root {
+        font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+        color: #0f172a;
+        background: #f8fafc;
+      }
+      body {
+        margin: 0;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 22px;
+      }
+      #status {
+        font-size: 14px;
+        color: #334155;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      th,
+      td {
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 14px;
+      }
+      th {
+        background: #f1f5f9;
+        font-weight: 600;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        color: #0f172a;
+        font-size: 12px;
+      }
+      .error {
+        color: #b91c1c;
+        background: #fef2f2;
+        border: 1px solid #fecdd3;
+        padding: 10px 12px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>AzViz Web App</h1>
+      <div id="status">Loading resources…</div>
+    </header>
+    <div id="error" class="error" style="display: none"></div>
+    <table id="table" style="display: none">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Location</th>
+          <th>Kind</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <script>
+      const statusEl = document.getElementById("status");
+      const errorEl = document.getElementById("error");
+      const tableEl = document.getElementById("table");
+      const tbodyEl = document.getElementById("tbody");
+
+      async function loadResources() {
+        try {
+          const res = await fetch("/api/resources");
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.error || "Request failed");
+          }
+          statusEl.textContent = `Showing ${data.items.length} resources for subscription ${data.subscriptionId}`;
+          tableEl.style.display = "table";
+          tbodyEl.innerHTML = "";
+          data.items.forEach((item) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${item.name}</td>
+              <td><span class="pill">${item.type}</span></td>
+              <td>${item.location || "—"}</td>
+              <td>${item.kind || "—"}</td>
+            `;
+            tbodyEl.appendChild(tr);
+          });
+        } catch (err) {
+          statusEl.textContent = "Failed to load resources";
+          errorEl.style.display = "block";
+          errorEl.textContent = err.message;
+        }
+      }
+
+      loadResources();
+    </script>
+  </body>
+</html>
