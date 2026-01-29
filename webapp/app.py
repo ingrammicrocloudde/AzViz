@@ -8,13 +8,19 @@ app = Flask(__name__)
 
 
 def _get_subscription_id():
+    """
+    Retrieve subscription id from environment.
+    Prefers AZURE_SUBSCRIPTION_ID, falls back to SUBSCRIPTION_ID.
+    """
     return os.environ.get("AZURE_SUBSCRIPTION_ID") or os.environ.get("SUBSCRIPTION_ID")
 
 
 def _get_resources(subscription_id: str):
+    """
+    Fetch up to 200 resources from the given subscription.
+    """
     credential = DefaultAzureCredential(exclude_interactive_browser_credential=True)
     client = ResourceManagementClient(credential, subscription_id)
-    # limit to first 200 resources for quick rendering
     return [
         {
             "id": r.id,
@@ -34,11 +40,13 @@ def resources():
         return (
             jsonify(
                 {
-                    "error": "AZURE_SUBSCRIPTION_ID is not set. Configure the app setting so the managed identity knows which subscription to read."
+                "error": "AZURE_SUBSCRIPTION_ID or SUBSCRIPTION_ID is not set. Configure the app setting so the managed identity knows which subscription to read."
                 }
             ),
             500,
         )
+    if len(subscription_id) != 36 or subscription_id.count("-") != 4:
+        return jsonify({"error": "Subscription id format appears invalid."}), 400
 
     try:
         data = _get_resources(subscription_id)
@@ -54,6 +62,8 @@ def resources():
             500,
         )
     except Exception as exc:  # pylint: disable=broad-except
+        # Log server-side for diagnostics; keep response sanitized
+        app.logger.exception("Unexpected error while listing resources")
         return jsonify({"error": "Unexpected error", "details": str(exc)}), 500
 
 

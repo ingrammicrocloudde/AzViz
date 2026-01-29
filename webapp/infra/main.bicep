@@ -25,7 +25,7 @@ resource plan 'Microsoft.Web/serverfarms@2023-12-01' = {
 resource app 'Microsoft.Web/sites@2023-12-01' = {
   name: webAppName
   location: location
-  kind: 'app,linux,container'
+  kind: 'app,linux'
   properties: {
     serverFarmId: plan.id
     siteConfig: {

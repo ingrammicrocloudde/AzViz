@@ -11,8 +11,12 @@ if (-not (Get-Module -ListAvailable -Name Az.Accounts)) {
     exit 1
 }
 
-Connect-AzAccount -ErrorAction Stop | Out-Null
-Select-AzSubscription -Subscription (Get-AzContext).Subscription -ErrorAction Stop | Out-Null
+$context = Get-AzContext -ErrorAction SilentlyContinue
+if (-not $context) {
+    Connect-AzAccount -ErrorAction Stop | Out-Null
+    $context = Get-AzContext -ErrorAction Stop
+}
+Select-AzSubscription -Subscription $context.Subscription -ErrorAction Stop | Out-Null
 
 if (-not (Get-AzResourceGroup -Name $ResourceGroup -ErrorAction SilentlyContinue)) {
     Write-Host "Creating resource group $ResourceGroup in $Location..."
