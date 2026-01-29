@@ -33,6 +33,32 @@ brew install graphviz
 
 ## Installation
 
+### Deploy the sample Azure Web App (lists subscription resources)
+
+1. Sign in:
+
+   ```powershell
+   Connect-AzAccount
+   ```
+
+2. Deploy the App Service plan + Web App (with managed identity) using Bicep:
+
+   ```powershell
+   cd ./webapp/infra
+   ./deploy.ps1 -ResourceGroup rg-azviz-web -WebAppName azviz-demo-web
+   ```
+
+   The deployment assigns the Web App a system-assigned managed identity.
+
+3. Grant subscription context to the app via app setting:
+
+   ```powershell
+   Set-AzWebApp -ResourceGroup rg-azviz-web -Name azviz-demo-web `
+     -AppSettings @{ "AZURE_SUBSCRIPTION_ID" = (Get-AzContext).Subscription.Id }
+   ```
+
+4. Browse to `https://azviz-demo-web.azurewebsites.net` to see resources (first 200) in that subscription.
+
 ### From PowerShell Gallery
 
 ```Bash
